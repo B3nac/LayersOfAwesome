@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item android:id="@+id/account"
+        android:icon="@drawable/ic_menu_gallery"
+        android:title="@string/my_account"/>
+    <item android:id="@+id/settings"
+        android:icon="@drawable/ic_menu_slideshow"
+        android:title="@string/settings"/>
+    <item
+        android:id="@+id/import_wallet"
+        android:icon="@drawable/ic_launcher_foreground"
+        android:title="@string/import_wallet" />
+
+
+</menu>
