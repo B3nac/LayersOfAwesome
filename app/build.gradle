@@ -8,7 +8,7 @@ android {
         jvmTarget = '1.8'
     }
     defaultConfig {
-        applicationId "b3nac.LevelsOfAwesome"
+        applicationId "b3nac.LayersOfAwesome"
         minSdkVersion 26
         targetSdkVersion 28
         versionCode 1

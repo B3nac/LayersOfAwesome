@@ -12,7 +12,7 @@ class CustomAdapter(private val context: Context, private val list: ArrayList<St
 
     private inner class ViewHolder constructor(itemView: View) : RecyclerView.ViewHolder(itemView) {
 
-        var tvLabel: TextView = itemView.findViewById(R.id.tv_label)
+        var walletFileLabel: TextView = itemView.findViewById(R.id.wallet_file_label)
 
         init {
             // Initialize your All views present in list items
@@ -20,8 +20,7 @@ class CustomAdapter(private val context: Context, private val list: ArrayList<St
 
         fun bind(position: Int) {
             // This method will be called anytime a list item is created or update its data
-            //Do your stuff here
-            tvLabel.text = list[position]
+            walletFileLabel.text = list[position]
         }
     }
 

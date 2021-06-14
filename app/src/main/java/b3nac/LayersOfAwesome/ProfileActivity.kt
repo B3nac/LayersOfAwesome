@@ -1,6 +1,5 @@
 package b3nac.LayersOfAwesome
 
-import android.content.DialogInterface
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
@@ -30,28 +29,37 @@ import java.util.concurrent.ExecutionException
 class ProfileActivity : AppCompatActivity() {
 
     private var privateAddressView: TextView? = null
-    private var tBalance: TextView? = null
-    private var mWalletAddress: TextView? = null
+    private var totalBalance: TextView? = null
+    private var publicWalletAddress: TextView? = null
     private var walletSeedPhraseView: TextView? = null
 
-    private var dl: DrawerLayout? = null
-    private var t: ActionBarDrawerToggle? = null
+    private var drawerLayout: DrawerLayout? = null
+    private var toggleDrawer: ActionBarDrawerToggle? = null
     private var nv: NavigationView? = null
-    //private val result: EditText? = null
+
     private val data = arrayListOf<String>()
     lateinit var resultToString: String
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.profile_main)
-        val li = LayoutInflater.from(this)
-        val promptsView: View = li.inflate(R.layout.prompts, null)
+        val inflateLayout = LayoutInflater.from(this)
+        val promptsView: View = inflateLayout.inflate(R.layout.prompts, null)
 
         SecureSharedPrefs.setContext(this)
         val secure = SecureSharedPrefs()
         val path = applicationContext.filesDir
+        val address = secure.getSecurePrefs().getString("address", "")
+        val privateWalletKey = secure.getSecurePrefs().getString("wallet_private_key", "")
+        val walletSeedPhrase = secure.getSecurePrefs().getString("wallet_mnemonic", "")
 
-        //val result = findViewById<View>(R.id.editTextDialogUserInput) as EditText
+        publicWalletAddress = findViewById<View>(R.id.wallet_address) as TextView
+        privateAddressView = findViewById<View>(R.id.wallet_private_address) as TextView
+        walletSeedPhraseView = findViewById<View>(R.id.wallet_seed_phrase) as TextView
+
+        publicWalletAddress!!.text = address
+        privateAddressView!!.text = privateWalletKey
+        walletSeedPhraseView!!.text = walletSeedPhrase
 
         val alertDialogBuilder = AlertDialog.Builder(
                 this)
@@ -68,10 +76,10 @@ class ProfileActivity : AppCompatActivity() {
                 ) { dialog, id -> // get user input and set it to result
                     // edit text
                     resultToString = userInput.text.toString()
-                    Log.e("TEXT RESULT", "$resultToString")
+                    Log.e("TEXT RESULT", resultToString)
                 }
-                .setNegativeButton("Cancel",
-                        DialogInterface.OnClickListener { dialog, id -> dialog.cancel() })
+                .setNegativeButton("Cancel"
+                ) { dialog, id -> dialog.cancel() }
 
         // create alert dialog
         val alertDialog: AlertDialog = alertDialogBuilder.create()
@@ -85,19 +93,31 @@ class ProfileActivity : AppCompatActivity() {
         recyclerView.addOnItemTouchListener(
                 RecyclerItemClickListener(applicationContext, object : RecyclerItemClickListener.OnItemClickListener {
                     override fun onItemClick(view: View?, position: Int) {
-                        // TODO Handle item click
+                        //Add integer matching with onClick for mnemonic phrase
                         Log.e("CLICK", "$position")
                         val test = "HI"
-                        var wtf = data[position]
-                        Log.e("CLICK", "$wtf")
+                        val wtf = data[position]
+                        Log.e("CLICK", wtf)
                         val pathToWallet: String = wtf.substring(wtf.indexOf("/") + 1)
-                        Log.e("CLICK", "$pathToWallet")
+                        Log.e("CLICK", pathToWallet)
                         try {
-                            Log.e("TEXT RESULT", "$resultToString")
+                            Log.e("TEXT RESULT", resultToString)
                             val credentials = WalletUtils.loadCredentials(resultToString, pathToWallet)
-                            val address = credentials.address
-                            mWalletAddress!!.text = address
-                            Log.e("Ethereum address", address)
+                            val test = credentials.toString()
+                            Log.e("creds", test)
+                            //val mnemonic = credentials.mnemonic
+                            val editor = secure.getSecurePrefs().edit()
+                            editor.putString("address", credentials.address)
+                            editor.apply()
+                            editor.putString("wallet_private_key", credentials.ecKeyPair.privateKey.toString(16))
+                            editor.apply()
+                            //editor.putString("wallet_mnemonic", mnemonic.toString())
+                            //editor.apply()
+                            publicWalletAddress!!.text = credentials.address
+                            Log.e("Ethereum address", credentials.address)
+                            privateAddressView!!.text = credentials.ecKeyPair.privateKey.toString(16)
+                            val walletSeedPhrase = secure.getSecurePrefs().getString("wallet_mnemonic_$position", "")
+                            walletSeedPhraseView!!.text = walletSeedPhrase
                         } catch (e: org.web3j.crypto.CipherException) {
                             alertDialog.show()
                         }
@@ -105,19 +125,17 @@ class ProfileActivity : AppCompatActivity() {
                 })
         )
 
-        dl = findViewById<View>(R.id.profile_main) as DrawerLayout
-        t = ActionBarDrawerToggle(this, dl, R.string.app_name, R.string.contact)
-        dl!!.addDrawerListener(t!!)
-        t!!.syncState()
+        drawerLayout = findViewById<View>(R.id.profile_main) as DrawerLayout
+        toggleDrawer = ActionBarDrawerToggle(this, drawerLayout, R.string.app_name, R.string.contact)
+        drawerLayout!!.addDrawerListener(toggleDrawer!!)
+        toggleDrawer!!.syncState()
         supportActionBar?.setDisplayHomeAsUpEnabled(true);
         nv = findViewById<View>(R.id.navigation) as NavigationView
         nv!!.setNavigationItemSelectedListener(NavigationView.OnNavigationItemSelectedListener { item ->
 
-            val id = item.itemId
-
-            when (id) {
+            when (item.itemId) {
                 R.id.account -> Toast.makeText(this@ProfileActivity, "My Account", Toast.LENGTH_SHORT).show()
-                R.id.settings -> startActivity(Intent(this, GenerateWalletActivity::class.java))
+                R.id.generate_wallet -> startActivity(Intent(this, GenerateWalletActivity::class.java))
                 R.id.import_wallet -> startActivity(Intent(this, ImportWalletActivity::class.java))
                 else -> return@OnNavigationItemSelectedListener true
             }
@@ -130,37 +148,37 @@ class ProfileActivity : AppCompatActivity() {
 
         try
         {
+            //Put secure prefs value for public key here
+
             ethGetBalance = web3.ethGetBalance("0x373BBb32A7886A2d5467b6BCc53a18d411C6b275", DefaultBlockParameterName.LATEST).sendAsync().get()
             val wei = ethGetBalance.balance
-            val totalBalance = wei.toString()
-            Log.e("BALANCE: ", totalBalance)
+            val getTotalBalance = wei.toString()
+            Log.e("BALANCE: ", getTotalBalance)
             val tokenValue = Convert.fromWei(wei.toString(), Convert.Unit.ETHER)
             val strTokenAmount = tokenValue.toString()
-            //val address = secure.getSecurePrefs().getString("address", "")
-            val private_wallet_key = secure.getSecurePrefs().getString("wallet_private_key", "")
-            val wallet_seed_phrase = secure.getSecurePrefs().getString("wallet_mnemonic", "")
-            //mBalance = findViewById<View>(R.id.ethTextView) as TextView
-            tBalance = findViewById<View>(R.id.totalBalanceView) as TextView
-            mWalletAddress = findViewById<View>(R.id.wallet_address) as TextView
+            val address = secure.getSecurePrefs().getString("address", "")
+            val privateWalletKey = secure.getSecurePrefs().getString("wallet_private_key", "")
+            val walletSeedPhrase = secure.getSecurePrefs().getString("wallet_mnemonic_0", "")
+
+            totalBalance = findViewById<View>(R.id.totalBalanceView) as TextView
+            publicWalletAddress = findViewById<View>(R.id.wallet_address) as TextView
             privateAddressView = findViewById<View>(R.id.wallet_private_address) as TextView
             walletSeedPhraseView = findViewById<View>(R.id.wallet_seed_phrase) as TextView
 
-            privateAddressView!!.text = private_wallet_key
-            walletSeedPhraseView!!.text = wallet_seed_phrase
-            tBalance!!.text = strTokenAmount
+            publicWalletAddress!!.text = address
+            privateAddressView!!.text = privateWalletKey
+            walletSeedPhraseView!!.text = walletSeedPhrase
+            totalBalance!!.text = strTokenAmount
 
-        }catch (e: InterruptedException)
-        {
+        } catch (e: InterruptedException) {
             e.printStackTrace()
-        }catch (e: ExecutionException)
-        {
+        } catch (e: ExecutionException) {
             e.printStackTrace()
         }
-
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        return if (t!!.onOptionsItemSelected(item)) true else super.onOptionsItemSelected(item)
+        return if (toggleDrawer!!.onOptionsItemSelected(item)) true else super.onOptionsItemSelected(item)
     }
 
     private fun checkFiles(path: String) {
@@ -171,5 +189,4 @@ class ProfileActivity : AppCompatActivity() {
             }
         }
     }
-
 }

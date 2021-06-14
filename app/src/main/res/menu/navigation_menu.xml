@@ -4,9 +4,10 @@
     <item android:id="@+id/account"
         android:icon="@drawable/ic_menu_gallery"
         android:title="@string/my_account"/>
-    <item android:id="@+id/settings"
+    <item
+        android:id="@+id/generate_wallet"
         android:icon="@drawable/ic_menu_slideshow"
-        android:title="@string/settings"/>
+        android:title="@string/generate_wallet" />
     <item
         android:id="@+id/import_wallet"
         android:icon="@drawable/ic_launcher_foreground"

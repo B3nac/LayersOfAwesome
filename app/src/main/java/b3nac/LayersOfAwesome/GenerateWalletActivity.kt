@@ -17,10 +17,10 @@ import java.security.Security
 
 class GenerateWalletActivity : AppCompatActivity(), GenerateContract.View {
 
-    private var mWalletPresenter: GenerateContract.Presenter? = null
-    private var mWalletAddress: String? = null
-    private var mPassword: EditText? = null
-    private var mProgressBar: ProgressBar? = null
+    private var walletPresenter: GenerateContract.Presenter? = null
+    private var walletAddress: String? = null
+    private var passwordField: EditText? = null
+    private var progressBar: ProgressBar? = null
     private val secure = SecureSharedPrefs()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -33,11 +33,11 @@ class GenerateWalletActivity : AppCompatActivity(), GenerateContract.View {
         //setSupportActionBar(toolbar)
         setupBouncyCastle()
         val mGenerateWalletButton = findViewById<View>(R.id.generate_wallet_button) as Button
-        mPassword = findViewById<View>(R.id.password) as EditText
-        mProgressBar = findViewById<View>(R.id.generate_wallet_progress) as ProgressBar
-        mProgressBar!!.visibility = View.INVISIBLE
+        passwordField = findViewById<View>(R.id.password) as EditText
+        progressBar = findViewById<View>(R.id.generate_wallet_progress) as ProgressBar
+        progressBar!!.visibility = View.INVISIBLE
 
-        mGenerateWalletButton.setOnClickListener { v: View? ->
+        mGenerateWalletButton.setOnClickListener {
             val permissionCheck = ContextCompat.checkSelfPermission(this@GenerateWalletActivity,
                     Manifest.permission.WRITE_EXTERNAL_STORAGE)
             when {
@@ -46,25 +46,25 @@ class GenerateWalletActivity : AppCompatActivity(), GenerateContract.View {
                             this@GenerateWalletActivity, arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE),
                             REQUEST_PERMISSION_WRITE_STORAGE)
                 }
-                mPassword!!.text.toString().isEmpty() -> {
+                passwordField!!.text.toString().isEmpty() -> {
                     Toast.makeText(this@GenerateWalletActivity, "Password field cannot be empty", Toast.LENGTH_SHORT).show()
                 }
-                isPasswordValid(mPassword!!.text.toString()) -> {
+                isPasswordValid(passwordField!!.text.toString()) -> {
                     Toast.makeText(this@GenerateWalletActivity, "Password has to be at least 8 characters long", Toast.LENGTH_SHORT).show()
                 }
                 else -> {
-                    mProgressBar!!.visibility = View.VISIBLE
+                    progressBar!!.visibility = View.VISIBLE
 
                     Thread {
-                        mWalletPresenter = GeneratePresenter(this@GenerateWalletActivity,
-                                mPassword!!.text.toString(), applicationContext)
-                        (mWalletPresenter as GeneratePresenter).generateWallet(mPassword!!.text.toString())
+                        walletPresenter = GeneratePresenter(this@GenerateWalletActivity,
+                                passwordField!!.text.toString(), applicationContext)
+                        (walletPresenter as GeneratePresenter).generateWallet(passwordField!!.text.toString())
 
                         runOnUiThread {
                             val intent = Intent(this@GenerateWalletActivity, ProfileActivity::class.java)
-                            intent.putExtra("WalletAddress", mWalletAddress)
+                            intent.putExtra("WalletAddress", walletAddress)
                             startActivity(intent)
-                            mProgressBar!!.visibility = View.GONE
+                            progressBar!!.visibility = View.GONE
                         }
                     }.start()
                 }
@@ -72,14 +72,14 @@ class GenerateWalletActivity : AppCompatActivity(), GenerateContract.View {
         }
     }
 
-    override fun setPresenter(presenter: GenerateContract.Presenter) {
-        mWalletPresenter = presenter
+    override fun setPresenter(presenter: GenerateContract.Presenter?) {
+        walletPresenter = presenter
     }
 
-    override fun showGeneratedWallet(address: String) {
-        mWalletAddress = address
+    override fun showGeneratedWallet(walletPublicAddress: String?) {
+        walletAddress = walletPublicAddress
         val editor = secure.getSecurePrefs().edit()
-        editor.putString("address", address)
+        editor.putString("address", walletAddress)
         editor.apply()
     }
 
@@ -111,4 +111,5 @@ class GenerateWalletActivity : AppCompatActivity(), GenerateContract.View {
     companion object {
         private const val REQUEST_PERMISSION_WRITE_STORAGE = 0
     }
+
 }

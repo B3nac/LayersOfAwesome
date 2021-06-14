@@ -14,18 +14,16 @@ import java.security.NoSuchAlgorithmException
 import java.security.NoSuchProviderException
 
 
-class GeneratePresenter(private val mWalletGenerationView: GenerateContract.View, private val mPassword: String, context: Context) : GenerateContract.Presenter {
+class GeneratePresenter(private val walletGenerationView: GenerateContract.View, private val walletPassword: String, context: Context) : GenerateContract.Presenter {
 
         private val c = context
         private var fileExists = false
 
-     override fun generateWallet(password: String) {
+     override fun generateWallet(password: String?) {
 
          val path = c.applicationContext.filesDir
 
         try {
-
-            //checkFiles(path.toString())
             when {
                 fileExists -> {
                     return
@@ -36,6 +34,7 @@ class GeneratePresenter(private val mWalletGenerationView: GenerateContract.View
 
             val fileName = WalletUtils.generateBip39Wallet(password, path)
             val mnemonic = fileName.mnemonic
+            var mnemonicIncrement = 0
 
             Log.e("generateWalletFile:", fileName.toString())
             Log.e("generateWalletPhrase:", mnemonic.toString())
@@ -43,20 +42,32 @@ class GeneratePresenter(private val mWalletGenerationView: GenerateContract.View
             val credentials = WalletUtils.loadBip39Credentials(
                     password,
                     mnemonic)
-            mWalletGenerationView.showGeneratedWallet(credentials.address)
+            walletGenerationView.showGeneratedWallet(credentials.address)
 
-            SecureSharedPrefs.setContext(this)
+            SecureSharedPrefs.setContext()
             val secure = SecureSharedPrefs()
             val editor = secure.getSecurePrefs().edit()
+
+            if (!secure.getSecurePrefs().contains("mnemonicIncrement")) {
+                editor.putInt("mnemonicIncrement", mnemonicIncrement)
+                editor.apply()
+                Log.e("TAG", "mnemonicIncrement: " + mnemonicIncrement)
+
+            } else {
+                mnemonicIncrement += 1
+                editor.putInt("mnemonicIncrement", mnemonicIncrement)
+                editor.apply()
+                Log.e("TAG", "mnemonicIncrement: " + mnemonicIncrement)
+            }
+
             //Put boolean setting here if no file checks work and check for a created address true WOOT!
             editor.putString("wallet_private_key", credentials.ecKeyPair.privateKey.toString(16))
             editor.apply()
-            editor.putString("wallet_mnemonic", mnemonic.toString())
+            editor.putString("wallet_mnemonic_$mnemonicIncrement", mnemonic.toString())
             editor.apply()
+            //Need to save file increment in an array after deleting save array with new file increments wallet_mnemonic_$mnemonicIncrement
 
-            Log.e("TAG", "WalletAddress: " + credentials.address)
-            Log.e("TAG", "PublicKey: " + credentials.ecKeyPair.publicKey)
-            Log.e("TAG", "PrivateKey: " + credentials.ecKeyPair.privateKey)
+            Log.e("TAG", "MnemonicFilename: " + "wallet_mnemonic_$mnemonicIncrement")
 
         } catch (e: NoSuchAlgorithmException) {
             e.printStackTrace()
@@ -72,7 +83,7 @@ class GeneratePresenter(private val mWalletGenerationView: GenerateContract.View
     }
 
     override fun start() {
-        generateWallet(mPassword)
+        generateWallet(walletPassword)
     }
 
     private fun checkFiles(path: String) {
@@ -90,6 +101,6 @@ class GeneratePresenter(private val mWalletGenerationView: GenerateContract.View
     }
 }
 
-private fun SecureSharedPrefs.Companion.setContext(con: GeneratePresenter) {
+private fun SecureSharedPrefs.Companion.setContext() {
 
 }

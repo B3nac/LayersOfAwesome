@@ -17,7 +17,7 @@ class SecureSharedPrefs : Application(){
         }
     }
 
-    private val preferencesName = "c0c00n.encrypted"
+    private val preferencesName = "layersofawesome.encrypted"
 
     var masterKey = MasterKey.Builder(context, MasterKey.DEFAULT_MASTER_KEY_ALIAS).setKeyScheme(MasterKey.KeyScheme.AES256_GCM).build()
 
@@ -26,7 +26,7 @@ class SecureSharedPrefs : Application(){
             preferencesName,
             masterKey, // masterKey created above
             EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
-            EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM);
+            EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM)
 
     fun saveUserData(context: Context, string: String, boolean: Boolean) {
 

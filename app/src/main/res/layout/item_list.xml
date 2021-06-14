@@ -6,10 +6,10 @@
     android:padding="10dp">
 
     <TextView
-        android:id="@+id/tv_label"
+        android:id="@+id/wallet_file_label"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="List item"
+        android:text="@string/list_item"
         android:textColor="#000000"
         android:textSize="20sp"></TextView>
 
