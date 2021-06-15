@@ -59,4 +59,5 @@
     <string name="my_account">My Account</string>
     <string name="list_item">List item</string>
     <string name="generate_wallet">Generate Wallet</string>
+    <string name="wallet_address">Wallet Address</string>
 </resources>

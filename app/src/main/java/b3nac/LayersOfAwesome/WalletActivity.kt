@@ -1,7 +1,6 @@
 package b3nac.LayersOfAwesome
 
 import android.os.Bundle
-import android.util.Log
 import android.view.View
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
@@ -23,22 +22,17 @@ class WalletActivity : AppCompatActivity() {
 
         SecureSharedPrefs.setContext(this)
         val secure = SecureSharedPrefs()
-        //Toolbar toolbar = findViewById(R.id.toolbar);
-        //setSupportActionBar(toolbar);
         val fab = findViewById<FloatingActionButton>(R.id.fab)
         fab.setOnClickListener { view: View? ->
             Snackbar.make(view!!, "Replace with your own action", Snackbar.LENGTH_LONG)
                     .setAction("Action", null).show()
         }
         val extras = intent.extras
-        val web3 = Web3j.build(HttpService("https://mainnet.infura.io/v3/8531ac48cf594a719e497caea76bc0d5"))
+        val web3 = Web3j.build(HttpService(""))
         val ethGetBalance: EthGetBalance
         try {
-            ethGetBalance = web3.ethGetBalance("0x373BBb32A7886A2d5467b6BCc53a18d411C6b275", DefaultBlockParameterName.LATEST).sendAsync().get()
-            //Log.e("WALLET ADDRESS: ", extras!!.getString("WalletAddress"))
+            ethGetBalance = web3.ethGetBalance("", DefaultBlockParameterName.LATEST).sendAsync().get()
             val wei = ethGetBalance.balance
-            val totalBalance = wei.toString()
-            Log.e("BALANCE: ", totalBalance)
             val tokenValue = Convert.fromWei(wei.toString(), Convert.Unit.ETHER)
             val strTokenAmount = tokenValue.toString()
             mBalance = findViewById(R.id.wallet_balance)

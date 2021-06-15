@@ -36,7 +36,6 @@ class GeneratePresenter(private val walletGenerationView: GenerateContract.View,
             val mnemonic = fileName.mnemonic
             var mnemonicIncrement = 0
 
-            Log.e("generateWalletFile:", fileName.toString())
             Log.e("generateWalletPhrase:", mnemonic.toString())
 
             val credentials = WalletUtils.loadBip39Credentials(
@@ -51,23 +50,18 @@ class GeneratePresenter(private val walletGenerationView: GenerateContract.View,
             if (!secure.getSecurePrefs().contains("mnemonicIncrement")) {
                 editor.putInt("mnemonicIncrement", mnemonicIncrement)
                 editor.apply()
-                Log.e("TAG", "mnemonicIncrement: " + mnemonicIncrement)
-
             } else {
-                mnemonicIncrement += 1
-                editor.putInt("mnemonicIncrement", mnemonicIncrement)
-                editor.apply()
-                Log.e("TAG", "mnemonicIncrement: " + mnemonicIncrement)
+                if (mnemonicIncrement >= 0 && secure.getSecurePrefs().contains("mnemonicIncrement")) {
+                    mnemonicIncrement = secure.getSecurePrefs().getInt("mnemonicIncrement", 0) + 1
+                    editor.putInt("mnemonicIncrement", mnemonicIncrement)
+                    editor.apply()
+                }
             }
 
-            //Put boolean setting here if no file checks work and check for a created address true WOOT!
             editor.putString("wallet_private_key", credentials.ecKeyPair.privateKey.toString(16))
             editor.apply()
             editor.putString("wallet_mnemonic_$mnemonicIncrement", mnemonic.toString())
             editor.apply()
-            //Need to save file increment in an array after deleting save array with new file increments wallet_mnemonic_$mnemonicIncrement
-
-            Log.e("TAG", "MnemonicFilename: " + "wallet_mnemonic_$mnemonicIncrement")
 
         } catch (e: NoSuchAlgorithmException) {
             e.printStackTrace()
@@ -101,6 +95,4 @@ class GeneratePresenter(private val walletGenerationView: GenerateContract.View,
     }
 }
 
-private fun SecureSharedPrefs.Companion.setContext() {
-
-}
+private fun SecureSharedPrefs.Companion.setContext() {}

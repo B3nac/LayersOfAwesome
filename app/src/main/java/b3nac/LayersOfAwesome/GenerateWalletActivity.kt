@@ -29,8 +29,6 @@ class GenerateWalletActivity : AppCompatActivity(), GenerateContract.View {
 
         SecureSharedPrefs.setContext(this)
 
-        //val toolbar = findViewById<Toolbar>(R.id.toolbar)
-        //setSupportActionBar(toolbar)
         setupBouncyCastle()
         val mGenerateWalletButton = findViewById<View>(R.id.generate_wallet_button) as Button
         passwordField = findViewById<View>(R.id.password) as EditText
@@ -86,9 +84,9 @@ class GenerateWalletActivity : AppCompatActivity(), GenerateContract.View {
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
         when (requestCode) {
             REQUEST_PERMISSION_WRITE_STORAGE -> if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                //Granted.
+                Toast.makeText(this@GenerateWalletActivity, "Permission granted.", Toast.LENGTH_SHORT).show()
             } else {
-                //Denied.
+                Toast.makeText(this@GenerateWalletActivity, "Permission denied.", Toast.LENGTH_SHORT).show()
             }
         }
     }

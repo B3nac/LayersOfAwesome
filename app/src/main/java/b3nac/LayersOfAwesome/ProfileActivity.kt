@@ -39,6 +39,7 @@ class ProfileActivity : AppCompatActivity() {
 
     private val data = arrayListOf<String>()
     lateinit var resultToString: String
+    var inc: Int = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -74,16 +75,12 @@ class ProfileActivity : AppCompatActivity() {
                 .setCancelable(false)
                 .setPositiveButton("OK"
                 ) { dialog, id -> // get user input and set it to result
-                    // edit text
                     resultToString = userInput.text.toString()
-                    Log.e("TEXT RESULT", resultToString)
                 }
                 .setNegativeButton("Cancel"
                 ) { dialog, id -> dialog.cancel() }
 
-        // create alert dialog
         val alertDialog: AlertDialog = alertDialogBuilder.create()
-        // show it
 
         val recyclerView = findViewById<RecyclerView>(R.id.wallet_view)
 
@@ -93,31 +90,23 @@ class ProfileActivity : AppCompatActivity() {
         recyclerView.addOnItemTouchListener(
                 RecyclerItemClickListener(applicationContext, object : RecyclerItemClickListener.OnItemClickListener {
                     override fun onItemClick(view: View?, position: Int) {
-                        //Add integer matching with onClick for mnemonic phrase
-                        Log.e("CLICK", "$position")
-                        val test = "HI"
-                        val wtf = data[position]
-                        Log.e("CLICK", wtf)
-                        val pathToWallet: String = wtf.substring(wtf.indexOf("/") + 1)
-                        Log.e("CLICK", pathToWallet)
+                        val walletPosition = data[position]
+                        val pathToWallet: String = walletPosition.substring(walletPosition.indexOf("/") + 1)
+
                         try {
-                            Log.e("TEXT RESULT", resultToString)
                             val credentials = WalletUtils.loadCredentials(resultToString, pathToWallet)
-                            val test = credentials.toString()
-                            Log.e("creds", test)
-                            //val mnemonic = credentials.mnemonic
                             val editor = secure.getSecurePrefs().edit()
                             editor.putString("address", credentials.address)
                             editor.apply()
                             editor.putString("wallet_private_key", credentials.ecKeyPair.privateKey.toString(16))
                             editor.apply()
-                            //editor.putString("wallet_mnemonic", mnemonic.toString())
-                            //editor.apply()
                             publicWalletAddress!!.text = credentials.address
                             Log.e("Ethereum address", credentials.address)
                             privateAddressView!!.text = credentials.ecKeyPair.privateKey.toString(16)
                             val walletSeedPhrase = secure.getSecurePrefs().getString("wallet_mnemonic_$position", "")
+                            inc = position
                             walletSeedPhraseView!!.text = walletSeedPhrase
+
                         } catch (e: org.web3j.crypto.CipherException) {
                             alertDialog.show()
                         }
@@ -142,30 +131,25 @@ class ProfileActivity : AppCompatActivity() {
             true
         })
 
-        val web3 = Web3j.build(HttpService("https://mainnet.infura.io/v3/8531ac48cf594a719e497caea76bc0d5"))
+        val web3 = Web3j.build(HttpService("https://rinkeby.infura.io/v3/be7c3223576b475ba4728927d4917f03"))
 
         val ethGetBalance: EthGetBalance
 
-        try
-        {
-            //Put secure prefs value for public key here
-
-            ethGetBalance = web3.ethGetBalance("0x373BBb32A7886A2d5467b6BCc53a18d411C6b275", DefaultBlockParameterName.LATEST).sendAsync().get()
+        try {
+            ethGetBalance = web3.ethGetBalance(secure.getSecurePrefs().getString("address", ""), DefaultBlockParameterName.LATEST).sendAsync().get()
             val wei = ethGetBalance.balance
-            val getTotalBalance = wei.toString()
-            Log.e("BALANCE: ", getTotalBalance)
             val tokenValue = Convert.fromWei(wei.toString(), Convert.Unit.ETHER)
             val strTokenAmount = tokenValue.toString()
-            val address = secure.getSecurePrefs().getString("address", "")
+            val addressTwo = secure.getSecurePrefs().getString("address", "")
             val privateWalletKey = secure.getSecurePrefs().getString("wallet_private_key", "")
-            val walletSeedPhrase = secure.getSecurePrefs().getString("wallet_mnemonic_0", "")
+            val walletSeedPhrase = secure.getSecurePrefs().getString("wallet_mnemonic_$inc", "")
 
             totalBalance = findViewById<View>(R.id.totalBalanceView) as TextView
             publicWalletAddress = findViewById<View>(R.id.wallet_address) as TextView
             privateAddressView = findViewById<View>(R.id.wallet_private_address) as TextView
             walletSeedPhraseView = findViewById<View>(R.id.wallet_seed_phrase) as TextView
 
-            publicWalletAddress!!.text = address
+            publicWalletAddress!!.text = addressTwo
             privateAddressView!!.text = privateWalletKey
             walletSeedPhraseView!!.text = walletSeedPhrase
             totalBalance!!.text = strTokenAmount
@@ -184,7 +168,6 @@ class ProfileActivity : AppCompatActivity() {
     private fun checkFiles(path: String) {
         File(path).walk().forEach {
             if (it.toString() != path) {
-                Log.e("File exists!!!", it.toString())
                 data.add("Item $it")
             }
         }
