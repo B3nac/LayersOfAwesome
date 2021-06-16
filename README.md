@@ -19,3 +19,5 @@
 - Add build from source instructions
 - Make the GUI look epic
 - Add unit tests for quick feature testing
+
+## Disclaimer: This software is in alpha. Please only use test net addresses for testing until LayersOfAwesome is ready for main net.
